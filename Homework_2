@@ -8,21 +8,29 @@ val id1 = pieces(0).toInt
 val id2 = pieces(1).toInt
 
 def toDouble(s: String) = {
-if("?".equals(s)) Double.NaN else s.toDouble
+if("?".equals(s)||"".equals(s)) Double.NaN else s.toDouble
+}
+
+def toBoolean(s: String) = {
+if("".equals(s)) false else s.toBoolean
+}
+
+def toInt(s: String) = {
+if("?".equals(s)||"".equals(s)) 0 else s.toInt
 }
 
 def parse(line: String) = {
 val pieces = line.split(',')
 val id1 = pieces(0).toInt
 val id2 = pieces(1).toInt
-val middle = pieces.slice(2,11).map(toDouble)
+val scores = pieces.slice(2,11).map(toDouble)
 val matched = pieces(11).toBoolean
-(id1, id2, middle, matched)
+(id1, id2, scores, matched)
 }
 
-val mds = noheader.map(x => parse(x)) //question 4
 
-val matchCounts = mds.map(md => md._4).countByValue()		//counts number of matched and unmatched
+val parsed = noheader.map(line => parse(line)) //question 4
+
 
 
 
@@ -53,10 +61,25 @@ def apply(x: Double) = new NAStatCounter().add(x)
 }
 
 
-def getStats(line: String) = {
-val pieces = line.split(',')
-val middle = pieces.slice(2,11).map(toDouble)
-middle.map(d => NAStatCounter(d))
+
+//val dubArr = parsed.map(md => md._3)
+
+import org.apache.spark.rdd.RDD
+def statsWithMissing(rdd: RDD[Array[Double]]): Array[NAStatCounter] = {
+val nastats = rdd.mapPartitions((iter: Iterator[Array[Double]]) => {
+val nas: Array[NAStatCounter] = iter.next().map(d => NAStatCounter(d))
+iter.foreach(arr => {
+nas.zip(arr).foreach { case (n, d) => n.add(d) }
+})
+Iterator(nas)
+})
+nastats.reduce((n1, n2) => {
+n1.zip(n2).map { case (a, b) => a.merge(b) }
+})
 }
-//val stats = noheader.map(x => getStats(x))
-//stats.map(x => println(x))
+
+val statsm = statsWithMissing(parsed.filter(_._4).map(_._3)) 
+val statsn = statsWithMissing(parsed.filter(!_._4).map(_._3))
+statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
+
+
