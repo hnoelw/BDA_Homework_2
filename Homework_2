@@ -30,36 +30,39 @@ summary.map(x => println(x))*/
 
 
 
+
 import org.apache.spark.util.StatCounter
-class NAStatCounter extends Serializable {
-val stats: StatCounter = new StatCounter() //immutable
-var missing: Long = 0 // mutable
+class NAStatCounter extends Serializable{
+val stats: StatCounter = new StatCounter()
+var missing: Long = 0
 def add(x: Double): NAStatCounter = {
-if (java.lang.Double.isNaN(x)) {
-missing += 1
-} else {
+if(java.lang.Double.isNaN(x)){
+missing+=1
+} else{
 stats.merge(x)
 }
 this
 }
-def merge(other: NAStatCounter): NAStatCounter = {
+def merge (other: NAStatCounter): NAStatCounter = {
 stats.merge(other.stats)
 missing += other.missing
 this
 }
 override def toString = {
-"stats: " + stats.toString + " NaN: " + missing
+"stats: " + stats.toString + "NaN: " + missing
 }
 }
-object NAStatCounter extends Serializable {
+
+object NAStatCounter extends Serializable{
 def apply(x: Double) = new NAStatCounter().add(x)
-} // singleton helper function like Java static method
+}
 
 
-/*def getStats(line: String) = {
+def getStats(line: String) = {
 val pieces = line.split(',')
 val middle = pieces.slice(2,11).map(toDouble)
 val stats = middle.map(d => NAStatCounter(d))
-}*/
-
-val stats = noheader.map(x => x.map(d => NAStatCounter(d))
+stats
+}
+val stats = noheader.map(x => getStats(x))
+stats.map(x => println(x))
