@@ -22,12 +22,7 @@ val matched = pieces(11).toBoolean
 
 val mds = noheader.map(x => parse(x)) //question 4
 
-/*import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
-val vecNoheader = sc.parallelize(Seq(Vectors.dense(mds.map(x))))
-val summary: MultivariateStatisticalSummary = Statistics.colStats(vecNoheader)
-summary.map(x => println(x))*/
-
+val matchCounts = mds.map(md => md._4).countByValue()		//counts number of matched and unmatched
 
 
 
@@ -61,8 +56,7 @@ def apply(x: Double) = new NAStatCounter().add(x)
 def getStats(line: String) = {
 val pieces = line.split(',')
 val middle = pieces.slice(2,11).map(toDouble)
-val stats = middle.map(d => NAStatCounter(d))
-stats
+middle.map(d => NAStatCounter(d))
 }
-val stats = noheader.map(x => getStats(x))
-stats.map(x => println(x))
+//val stats = noheader.map(x => getStats(x))
+//stats.map(x => println(x))
