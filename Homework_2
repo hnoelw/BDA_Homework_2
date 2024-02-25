@@ -1,3 +1,7 @@
+import org.apache.spark.util.StatCounter
+import org.apache.spark.rdd.RDD
+case class MatchData(id1: Int, id2: Int, scores: Array[Double], matched: Boolean)
+
 val rawblocks = sc.textFile("block_1.csv")
 def isHeader(line: String):Boolean={line.contains("id_1")}
 val noheader = rawblocks.filter(x => !isHeader(x))
@@ -25,7 +29,7 @@ val id1 = pieces(0).toInt
 val id2 = pieces(1).toInt
 val scores = pieces.slice(2,11).map(toDouble)
 val matched = pieces(11).toBoolean
-(id1, id2, scores, matched)
+MatchData(id1, id2, scores, matched)
 }
 
 
@@ -33,8 +37,6 @@ val parsed = noheader.map(line => parse(line)) //question 4
 
 
 
-
-import org.apache.spark.util.StatCounter
 class NAStatCounter extends Serializable{
 val stats: StatCounter = new StatCounter()
 var missing: Long = 0
@@ -61,10 +63,6 @@ def apply(x: Double) = new NAStatCounter().add(x)
 }
 
 
-
-//val dubArr = parsed.map(md => md._3)
-
-import org.apache.spark.rdd.RDD
 def statsWithMissing(rdd: RDD[Array[Double]]): Array[NAStatCounter] = {
 val nastats = rdd.mapPartitions((iter: Iterator[Array[Double]]) => {
 val nas: Array[NAStatCounter] = iter.next().map(d => NAStatCounter(d))
@@ -78,8 +76,12 @@ n1.zip(n2).map { case (a, b) => a.merge(b) }
 })
 }
 
-val statsm = statsWithMissing(parsed.filter(_._4).map(_._3)) 
-val statsn = statsWithMissing(parsed.filter(!_._4).map(_._3))
+val isMatched = parsed.filter(_.matched)
+val notMatched = parsed.filter(!_.matched)
+val statsm = statsWithMissing(isMatched.map(_.scores))
+val statsn = statsWithMissing(notMatched.map(_.scores))
 statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
 
-
+/*val statsm = statsWithMissing(parsed.filter(_.matched).map(_.scores)) 
+val statsn = statsWithMissing(parsed.filter(!_.matched).map(_.scores))
+statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)*/
