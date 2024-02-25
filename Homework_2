@@ -81,17 +81,13 @@ n1.zip(n2).map { case (a, b) => a.merge(b) }
 
 val statsm = statsWithMissing(parsed.filter(_.matched).map(_.scores)) 
 val statsn = statsWithMissing(parsed.filter(!_.matched).map(_.scores))
-statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
+//statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
 
 
-//I am unsure as to why statsm is not running correctly, but since it is not, these numbers are not totally correct. I've gone ahead and calculated the best features with the numbers I do have.
+// DO NOT EDIT ANYTHING ABOVE THIS LINE!!!!
 
-/*(202,0.0010378828680847052)	//q = 5.3326E-9
-(1127211,0.0012273669565108225) //
-(0,0.002491882484452701)
-(1147308,0.1804428236116048)
-(0,1.2567951775277475E-4)
-(124,0.002815476102533687)
-(124,0.0018599207052170108)
-(124,0.002826602569765302)
-(2586,0.0034688022087556655)*/
+
+println("The following numbers are the q values for the 9 features:")
+statsm.zip(statsn).map { case(m, n) =>(((m.stats.mean - n.stats.mean)*(m.stats.mean - n.stats.mean)) /(m.missing + n.missing +1) ) }.foreach(println)
+
+print("Based on these features, we can see that cmp_lnamec1, cmp_by, and cmp_bd are the best features (the 3rd, 8th, and 6th, respectively).")
