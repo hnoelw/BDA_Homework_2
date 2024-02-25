@@ -76,12 +76,6 @@ n1.zip(n2).map { case (a, b) => a.merge(b) }
 })
 }
 
-val isMatched = parsed.filter(_.matched)
-val notMatched = parsed.filter(!_.matched)
-val statsm = statsWithMissing(isMatched.map(_.scores))
-val statsn = statsWithMissing(notMatched.map(_.scores))
-statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
-
-/*val statsm = statsWithMissing(parsed.filter(_.matched).map(_.scores)) 
+val statsm = statsWithMissing(parsed.filter(_.matched).map(_.scores)) 
 val statsn = statsWithMissing(parsed.filter(!_.matched).map(_.scores))
-statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)*/
+statsm.zip(statsn).map { case(m, n) =>(m.missing + n.missing, m.stats.mean - n.stats.mean) }.foreach(println)
